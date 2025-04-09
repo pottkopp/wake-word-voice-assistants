@@ -1,20 +1,17 @@
-substitutions:
+---
+esphome:
   name: m5stack-atom-echo
   friendly_name: M5Stack Atom Echo
-  micro_wake_word_model: okay_nabu  # alexa, hey_jarvis, hey_mycroft are also supported
-
-esphome:
-  name: ${name}
+  min_version: 2024.9.0
   name_add_mac_suffix: true
-  friendly_name: ${friendly_name}
-  min_version: 2025.2.0
+  project:
+    name: m5stack.atom-echo-voice-assistant
+    version: "24.7.24"
 
 esp32:
   board: m5stack-atom
   framework:
     type: esp-idf
-    version: 4.4.8
-    platform_version: 5.4.0
 
 logger:
 api:
@@ -22,13 +19,38 @@ api:
 ota:
   - platform: esphome
     id: ota_esphome
+  - platform: http_request
+    id: ota_http_request
+
+update:
+  - platform: http_request
+    id: update_http_request
+    name: Firmware
+    source: https://firmware.esphome.io/voice-assistant/m5stack-atom-echo/manifest.json
+
+http_request:
+
+dashboard_import:
+  package_import_url: github://pottkopp/firmware/voice-assistant/m5stack-atom-echo.yaml@main
 
 wifi:
+  on_connect:
+    - delay: 5s  # Gives time for improv results to be transmitted
+    - ble.disable:
+  on_disconnect:
+    - ble.enable:
   ap:
 
-captive_portal:
+improv_serial:
+
+esp32_improv:
+  authorizer: none
 
 button:
+  - platform: safe_mode
+    id: button_safe_mode
+    name: Safe Mode Boot
+
   - platform: factory_reset
     id: factory_reset_btn
     name: Factory reset
@@ -93,35 +115,41 @@ media_player:
 voice_assistant:
   id: va
   microphone: echo_microphone
-  media_player: echo_media_player
+# speaker: echo_speaker 
   noise_suppression_level: 2
   auto_gain: 31dBFS
   volume_multiplier: 2.0
+  vad_threshold: 3
   on_listening:
     - light.turn_on:
         id: led
-        blue: 100%
-        red: 0%
-        green: 0%
+        blue: 0%
+        red: 100%
+        green: 36%
         effect: "Slow Pulse"
   on_stt_vad_end:
     - light.turn_on:
         id: led
-        blue: 100%
-        red: 0%
-        green: 0%
+        blue: 0%
+        red: 100%
+        green: 36%
         effect: "Fast Pulse"
   on_tts_start:
-    - light.turn_on:
-        id: led
-        blue: 100%
-        red: 0%
-        green: 0%
-        brightness: 100%
-        effect: none
+    - homeassistant.service:
+        service: tts.speak
+        data:
+          entity_id: tts.piper_3
+          media_player_entity_id: media_player.mpd
+        data_template:
+          message: "{{ my_stt }}"
+        variables:
+          my_stt: return x;
   on_end:
     - delay: 100ms
-    - script.execute: start_wake_word
+#    - wait_until:
+#        not:
+#          speaker.is_playing:
+    - script.execute: reset_led
   on_error:
     - light.turn_on:
         id: led
@@ -130,21 +158,28 @@ voice_assistant:
         blue: 0%
         brightness: 100%
         effect: none
-    - delay: 2s
+    - delay: 1s
     - script.execute: reset_led
   on_client_connected:
-    - delay: 2s  # Give the api server time to settle
-    - script.execute: start_wake_word
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - voice_assistant.start_continuous:
+          - script.execute: reset_led
   on_client_disconnected:
-    - voice_assistant.stop:
-    - micro_wake_word.stop:
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - voice_assistant.stop:
+          - light.turn_off: led
   on_timer_finished:
     - voice_assistant.stop:
-    - micro_wake_word.stop:
+    - switch.turn_on: timer_ringing
     - wait_until:
         not:
           microphone.is_capturing:
-    - switch.turn_on: timer_ringing
     - light.turn_on:
         id: led
         red: 0%
@@ -152,15 +187,25 @@ voice_assistant:
         blue: 0%
         brightness: 100%
         effect: "Fast Pulse"
+    - while:
+        condition:
+          switch.is_on: timer_ringing
+        then:
+          - lambda: media_player.mpd.play(id(timer_finished_wave_file), sizeof(id(timer_finished_wave_file)));
+          - delay: 1s
     - wait_until:
-        - switch.is_off: timer_ringing
+        not:
+          speaker.is_playing:
     - light.turn_off: led
     - switch.turn_off: timer_ringing
+    - if:
+        condition:
+          switch.is_on: use_wake_word
+        then:
+          - voice_assistant.start_continuous:
+          - script.execute: reset_led
 
 binary_sensor:
-  # button does the following:
-  # short click - stop a timer
-  # if no timer then restart either microwakeword or voice assistant continuous
   - platform: gpio
     pin:
       number: GPIO39
@@ -180,7 +225,23 @@ binary_sensor:
               then:
                 - switch.turn_off: timer_ringing
               else:
-                - script.execute: start_wake_word
+                - if:
+                    condition:
+                      switch.is_off: use_wake_word
+                    then:
+                      - if:
+                          condition: voice_assistant.is_running
+                          then:
+                            - voice_assistant.stop:
+                            - script.execute: reset_led
+                          else:
+                            - voice_assistant.start:
+                    else:
+                      - voice_assistant.stop
+                      - delay: 1s
+                      - script.execute: reset_led
+                      - script.wait: reset_led
+                      - voice_assistant.start_continuous:
       - timing:
           - ON for at least 10s
         then:
@@ -217,7 +278,7 @@ script:
     then:
       - if:
           condition:
-            - lambda: return id(wake_word_engine_location).state == "On device";
+            - switch.is_on: use_wake_word
             - switch.is_on: use_listen_light
           then:
             - light.turn_on:
@@ -228,45 +289,28 @@ script:
                 brightness: 60%
                 effect: none
           else:
-            - if:
-                condition:
-                  - lambda: return id(wake_word_engine_location).state != "On device";
-                  - switch.is_on: use_listen_light
-                then:
-                  - light.turn_on:
-                      id: led
-                      red: 0%
-                      green: 100%
-                      blue: 100%
-                      brightness: 60%
-                      effect: none
-                else:
-                  - light.turn_off: led
-  - id: start_wake_word
-    then:
-      - wait_until:
-          and:
-            - media_player.is_idle:
-            - speaker.is_stopped:
-      - if:
-          condition:
-            lambda: return id(wake_word_engine_location).state == "On device";
-          then:
-            - voice_assistant.stop
-            - micro_wake_word.stop:
-            - delay: 1s
-            - script.execute: reset_led
-            - script.wait: reset_led
-            - micro_wake_word.start:
-          else:
-            - if:
-                condition: voice_assistant.is_running
-                then:
-                  - voice_assistant.stop:
-                  - script.execute: reset_led
-            - voice_assistant.start_continuous:
+            - light.turn_off: led
 
 switch:
+  - platform: template
+    name: Use wake word
+    id: use_wake_word
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    on_turn_on:
+      - lambda: id(va).set_use_wake_word(true);
+      - if:
+          condition:
+            not:
+              - voice_assistant.is_running
+          then:
+            - voice_assistant.start_continuous
+      - script.execute: reset_led
+    on_turn_off:
+      - voice_assistant.stop
+      - lambda: id(va).set_use_wake_word(false);
+      - script.execute: reset_led
   - platform: template
     name: Use listen light
     id: use_listen_light
@@ -280,67 +324,23 @@ switch:
   - platform: template
     id: timer_ringing
     optimistic: true
+    internal: true
     restore_mode: ALWAYS_OFF
-    on_turn_off:
-      # Turn off the repeat mode and disable the pause between playlist items
-      - lambda: |-
-              id(echo_media_player)
-                ->make_call()
-                .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_OFF)
-                .set_announcement(true)
-                .perform();
-              id(echo_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 0);
-      # Stop playing the alarm
-      - media_player.stop:
-          announcement: true
     on_turn_on:
-      # Turn on the repeat mode and pause for 1000 ms between playlist items/repeats
-      - lambda: |-
-            id(echo_media_player)
-              ->make_call()
-              .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_ONE)
-              .set_announcement(true)
-              .perform();
-            id(echo_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 1000);
-      - media_player.speaker.play_on_device_media_file:
-          media_file: timer_finished_wave_file
-          announcement: true
       - delay: 15min
       - switch.turn_off: timer_ringing
 
-select:
-  - platform: template
-    entity_category: config
-    name: Wake word engine location
-    id: wake_word_engine_location
-    optimistic: true
-    restore_value: true
-    options:
-      - In Home Assistant
-      - On device
-    initial_option: On device
-    on_value:
-      - if:
-          condition:
-            lambda: return x == "In Home Assistant";
-          then:
-            - micro_wake_word.stop
-            - delay: 500ms
-            - lambda: id(va).set_use_wake_word(true);
-            - voice_assistant.start_continuous:
-      - if:
-          condition:
-            lambda: return x == "On device";
-          then:
-            - lambda: id(va).set_use_wake_word(false);
-            - voice_assistant.stop
-            - delay: 500ms
-            - micro_wake_word.start
+external_components:
+  - source: github://pr#5230
+    components:
+      - esp_adf
+    refresh: 0s
+  - source: github://jesserockz/esphome-components
+    components: [file]
+    refresh: 0s
 
-micro_wake_word:
-  on_wake_word_detected:
-    - voice_assistant.start:
-        wake_word: !lambda return wake_word;
-  vad:
-  models:
-    - model: ${micro_wake_word_model}
+esp_adf:
+
+file:
+  - id: timer_finished_wave_file
+    file: https://github.com/esphome/firmware/raw/main/voice-assistant/sounds/timer_finished.wav
