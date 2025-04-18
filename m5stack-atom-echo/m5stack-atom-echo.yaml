@@ -55,11 +55,11 @@ speaker:
     buffer_duration: 60ms
 
 media_player:
-  - platform: speaker
+  - platform: media_player
     name: None
     id: echo_media_player
     announcement_pipeline:
-      speaker: echo_speaker
+      speaker: mpd
       format: WAV
     codec_support_enabled: false
     buffer_size: 6000
@@ -102,8 +102,7 @@ media_player:
 voice_assistant:
   id: va
   microphone: echo_microphone
-  media_player_entity_id: media_player.mpd
-#  media_player: echo_media_player
+  media_player: echo_media_player
   noise_suppression_level: 2
   auto_gain: 31dBFS
   volume_multiplier: 2.0
