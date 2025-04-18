@@ -1,4 +1,4 @@
-substitutions:
+itsubstitutions:
   name: m5stack-atom-echo
   friendly_name: M5Stack Atom Echo
   micro_wake_word_model: okay_nabu  # alexa, hey_jarvis, hey_mycroft are also supported
@@ -102,7 +102,7 @@ media_player:
 voice_assistant:
   id: va
   microphone: echo_microphone
-  media_player: mpd
+  media_player_entity_id: media_player.mpd
 #  media_player: echo_media_player
   noise_suppression_level: 2
   auto_gain: 31dBFS
