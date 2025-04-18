@@ -46,9 +46,13 @@ microphone:
     pdm: true
 
 speaker:
-  - platform: media_player
+  - platform: i2s_audio
     id: echo_speaker
-    media_player_entity_id: media_player.mpd
+    i2s_dout_pin: GPIO22
+    dac_type: external
+    bits_per_sample: 32bit
+    channel: right
+    buffer_duration: 60ms
 
 media_player:
   - platform: speaker
