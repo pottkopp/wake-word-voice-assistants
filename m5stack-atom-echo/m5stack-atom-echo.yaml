@@ -125,6 +125,12 @@ voice_assistant:
         data_template:
           message: "Antwort: {{ my_stt }}"
     - homeassistant.service:
+        service: notify.logkopp
+        data:
+          message: "{{ my_stt }}"
+        variables:
+          my_stt: return x;
+    - homeassistant.service:
         service: tts.speak
         data:
           entity_id: tts.piper_3
