@@ -124,8 +124,8 @@ voice_assistant:
         service: notify.logkopp
         data:
           message: "{{ my_stt }}"
-#        variables:
-#          my_stt: return x;
+        variables:
+          my_stt: return x;
   on_tts_start:
     - light.turn_on:
         id: led
