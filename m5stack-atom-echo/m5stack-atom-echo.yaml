@@ -135,7 +135,7 @@ voice_assistant:
     - homeassistant.service:
         service: notify.logkopp
         data:
-          message: "Antwort:" + "{{ my_stt }}"
+          message: "Antwort:"
     - homeassistant.service:
         service: tts.speak
         data:
