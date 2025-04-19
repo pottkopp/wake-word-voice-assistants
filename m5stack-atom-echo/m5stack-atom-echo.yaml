@@ -123,10 +123,6 @@ voice_assistant:
   on_stt_end:
     - homeassistant.service:
         service: notify.logkopp
-        data:
-          message: "Frage:"
-    - homeassistant.service:
-        service: notify.logkopp
         data_template:
           message: "Frage: {{ my_stt }}"
         variables:
@@ -139,10 +135,6 @@ voice_assistant:
         green: 36%
         brightness: 100%
         effect: none
-    - homeassistant.service:
-        service: notify.logkopp
-        data:
-          message: "Antwort:"
     - homeassistant.service:
         service: notify.logkopp
         data_template:
