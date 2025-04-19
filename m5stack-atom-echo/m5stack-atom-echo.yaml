@@ -133,6 +133,10 @@ voice_assistant:
         brightness: 100%
         effect: none
     - homeassistant.service:
+        service: notify.logkopp
+        data:
+          message: "Antwort: {{ my_stt }}"
+    - homeassistant.service:
         service: tts.speak
         data:
           entity_id: tts.piper_3
