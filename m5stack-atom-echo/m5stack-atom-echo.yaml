@@ -123,34 +123,12 @@ voice_assistant:
     - homeassistant.service:
         service: notify.logkopp
         data_template:
-          message: "{{ my_stt }}"
+          message: "{{ my_stt1 }} {{ my_stt2 }} {{ my_stt3 }} {{ my_stt4 }}"
         variables:
-          my_stt1: return a;  ##############################
-          my_stt2: return b;
-          my_stt3: return c;
-          my_stt4: return d;
-          my_stt5: return e;
-          my_stt6: return f;
-          my_stt7: return g;
-          my_stt8: return h;
-          my_stt9: return i;
-          my_stt10: return j;
-          my_stt11: return k;
-          my_stt12: return l;
-          my_stt13: return m;
-          my_stt14: return n;
-          my_stt15: return o;
-          my_stt16: return p;
-          my_stt17: return q;
-          my_stt18: return r;
-          my_stt19: return s;
-          my_stt20: return t;
-          my_stt21: return u;
-          my_stt22: return v;
-          my_stt23: return w;
-          my_stt24: return x;
-          my_stt25: return y;
-          my_stt26: return z;
+          my_stt1: return va;  ##############################
+          my_stt2: return jn;
+          my_stt3: return tm;
+          my_stt4: return yn;
   on_tts_start:
     - light.turn_on:
         id: led
