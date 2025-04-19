@@ -111,7 +111,7 @@ voice_assistant:
         data_template:
           message: "Frage: {{ my_stt }}"
         variables:
-          my_stt: return key;
+          my_stt: return s;  ##############################
   on_tts_start:
     - light.turn_on:
         id: led
