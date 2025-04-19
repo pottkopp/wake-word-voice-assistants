@@ -123,12 +123,11 @@ voice_assistant:
     - homeassistant.service:
         service: notify.logkopp
         data_template:
-          message: "{{ my_stt1 }} {{ my_stt2 }} {{ my_stt3 }} {{ my_stt4 }}"
+          message: "{{ my_stt1 }} {{ my_stt2 }} {{ my_stt3 }}"
         variables:
           my_stt1: return va;  ##############################
           my_stt2: return jn;
           my_stt3: return tm;
-          my_stt4: return yn;
   on_tts_start:
     - light.turn_on:
         id: led
