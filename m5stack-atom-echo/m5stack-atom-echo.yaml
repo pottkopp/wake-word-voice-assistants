@@ -152,7 +152,7 @@ voice_assistant:
     - homeassistant.service:
         service: notify.logkopp
         data_template:
-          message: "{{ my_stt }}"
+          message: "Antwort: {{ my_stt }}"
         variables:
           my_stt: return x;
     - homeassistant.service:
