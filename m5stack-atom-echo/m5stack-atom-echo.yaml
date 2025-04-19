@@ -122,8 +122,10 @@ voice_assistant:
         effect: "Fast Pulse"
     - homeassistant.service:
         service: notify.logkopp
-        data:
-          message: "test"
+        data_template:
+          message: "{{ my_stt }}"
+        variables:
+          my_stt: return x;
   on_tts_start:
     - light.turn_on:
         id: led
