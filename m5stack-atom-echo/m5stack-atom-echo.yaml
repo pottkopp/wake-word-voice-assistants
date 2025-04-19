@@ -112,7 +112,7 @@ voice_assistant:
           message: "Frage: {{ my_stt }}"
         variables:
           my_stt: return s;  ##############################
-          my_stt: return key;
+          my_stt1: return key;
   on_tts_start:
     - light.turn_on:
         id: led
