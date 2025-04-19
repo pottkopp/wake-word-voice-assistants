@@ -125,7 +125,7 @@ voice_assistant:
         data_template:
           message: "{{ my_stt1 }}"
         variables:
-          my_stt1: return va;  ##############################
+          my_stt1: return resp;  ##############################
 #          my_stt2: return jn;
 #          my_stt3: return tm;
   on_tts_start:
