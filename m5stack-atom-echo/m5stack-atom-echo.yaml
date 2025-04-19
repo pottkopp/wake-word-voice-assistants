@@ -120,14 +120,17 @@ voice_assistant:
         red: 100%
         green: 36%
         effect: "Fast Pulse"
+  on_stt_end:
+    - homeassistant.service:
+        service: notify.logkopp
+        data:
+          message: "Frage:"
     - homeassistant.service:
         service: notify.logkopp
         data_template:
-          message: "{{ my_stt1 }}"
+          message: "{{ my_stt }}"
         variables:
-          my_stt1: return resp;  ##############################
-#          my_stt2: return jn;
-#          my_stt3: return tm;
+          my_stt: return x;
   on_tts_start:
     - light.turn_on:
         id: led
