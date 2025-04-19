@@ -138,7 +138,7 @@ voice_assistant:
           message: "Antwort:"
     - homeassistant.service:
         service: notify.logkopp
-        data:
+        data_template:
           message: "{{ my_stt }}"
         variables:
           my_stt: return x;
