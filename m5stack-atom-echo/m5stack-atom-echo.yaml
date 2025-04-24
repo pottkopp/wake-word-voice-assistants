@@ -141,15 +141,6 @@ voice_assistant:
           message: "Antwort: {{ my_stt }}"
         variables:
           my_stt: return x;
-    - homeassistant.service:
-        service: tts.speak
-        data:
-          entity_id: tts.piper_3
-          media_player_entity_id: media_player.mpd
-        data_template:
-          message: "{{ my_stt }}"
-        variables:
-          my_stt: return x;
   on_end:
     - delay: 100ms
     - script.execute: start_wake_word
