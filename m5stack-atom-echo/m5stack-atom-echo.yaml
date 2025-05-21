@@ -1,7 +1,7 @@
 substitutions:
   name: m5stack-atom-echo
   friendly_name: M5Stack Atom Echo
-  micro_wake_word_model: okay_nabu  # alexa, hey_jarvis, hey_mycroft are also supported
+  micro_wake_word_model: hömma_nuppi  # alexa, hey_jarvis, hey_mycroft are also supported
 
 esphome:
   name: ${name}
@@ -13,8 +13,8 @@ esp32:
   board: m5stack-atom
   framework:
     type: esp-idf
-    version: 4.4.8
-    platform_version: 5.4.0
+#    version: 4.4.8
+#    platform_version: 5.4.0
 
 logger:
 api:
