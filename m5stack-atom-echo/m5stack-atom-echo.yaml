@@ -122,15 +122,15 @@ voice_assistant:
         service: notify.logkopp
         data_template:
           message: "Antwort: {{ my_stt }}"
-    - homeassistant.service:
-        service: tts.speak
-        data:
-          entity_id: tts.piper_3
-          media_player_entity_id: media_player.mpd
-        data_template:
-          message: "{{ my_stt }}"
-        variables:
-          my_stt: return x;
+#    - homeassistant.service:
+#        service: tts.speak
+#        data:
+#          entity_id: tts.piper_3
+#          media_player_entity_id: media_player.mpd
+#        data_template:
+#          message: "{{ my_stt }}"
+#        variables:
+#          my_stt: return x;
   on_end:
     # Handle the "nevermind" case where there is no announcement
     - wait_until:
